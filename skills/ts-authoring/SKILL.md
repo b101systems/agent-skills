@@ -18,9 +18,7 @@ and finish by hand: correct sequences, steps, limits and values.
 ## Prerequisites
 
 1. The B101 ATE Framework services are running with a valid license.
-2. The pc has
-   [NI TestStand](https://www.ni.com/es/support/downloads/software-products/download.teststand.html)
-   2022 or newer, with a development license.
+2. The pc has NI TestStand installed with a development license.
 
 The tool is `ts-cli`. Confirm it is live with `ts-cli status` (`ready: true`); if
 it is not ready, stop and report.
