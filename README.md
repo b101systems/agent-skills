@@ -16,9 +16,10 @@ Create and edit NI TestStand `.seq` files with `ts-cli`: sequences, steps,
 limits, locals/globals, arrays and batches. It does not run sequences, deploy
 or touch hardware.
 
-It requires a licensed B101 ATE Framework install and NI TestStand with a
-development license; the skill drives the `ts-cli` command that ships with the
-framework.
+It requires a licensed
+[B101 ATE Framework](https://github.com/b101systems/ate-framework-releases/releases/latest)
+install and NI TestStand with a development license; the skill drives the
+`ts-cli` command that ships with the framework.
 
 ## Install
 
