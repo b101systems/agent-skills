@@ -18,8 +18,10 @@ or touch hardware.
 
 It requires a licensed
 [B101 ATE Framework](https://github.com/b101systems/ate-framework-releases/releases/latest)
-install and NI TestStand with a development license; the skill drives the
-`ts-cli` command that ships with the framework.
+install and
+[NI TestStand](https://www.ni.com/es/support/downloads/software-products/download.teststand.html)
+2022 or newer with a development license; the skill drives the `ts-cli`
+command that ships with the framework.
 
 ## Install
 
