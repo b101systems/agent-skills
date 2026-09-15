@@ -18,7 +18,9 @@ and finish by hand: correct sequences, steps, limits and values.
 ## Prerequisites
 
 1. The B101 ATE Framework services are running with a valid license.
-2. The pc has NI TestStand installed with a development license.
+2. The pc has
+   [NI TestStand](https://www.ni.com/es/support/downloads/software-products/download.teststand.html)
+   2022 or newer, with a development license.
 
 The tool is `ts-cli`. Confirm it is live with `ts-cli status` (`ready: true`); if
 it is not ready, stop and report.
@@ -30,6 +32,8 @@ defaults. Do not probe mutating commands with guessed arguments on real files.
 
 Commands print JSON; errors are JSON on stderr with exit 1. Read ids such as
 `unique_step_id` and `step_ids` from responses instead of inventing them.
+
+Examples use `$SEQ` for the target `.seq` path; use the path you were given.
 
 ## Reconnaissance
 
@@ -151,11 +155,11 @@ editing the same steps afterwards.
    expected string, units, test condition. Map each measurable to a step.
 2. **Create the file.**
    ```bash
-   ts-cli create --file C:/Seq/UUT_RevA.seq --overwrite
+   ts-cli create --file "$SEQ" --overwrite
    ```
 3. **Add steps in order**, one measurement per step, limits inline:
    ```bash
-   ts-cli insert-step --file C:/Seq/UUT_RevA.seq \
+   ts-cli insert-step --file "$SEQ" \
      --step-type NumericLimitTest --name "VCC_5V0" \
      --set Limits.Low=4.75 --set Limits.High=5.25
    ```
@@ -163,7 +167,7 @@ editing the same steps afterwards.
    limits table.
 4. **Fix individual properties** when a value comes later:
    ```bash
-   ts-cli set-prop --file C:/Seq/UUT_RevA.seq \
+   ts-cli set-prop --file "$SEQ" \
      --step-id <id> --path Limits.High --number 5.25
    ```
 5. **Verify** with `inspect --values --match <signal>` and check every limit.
