@@ -1,9 +1,9 @@
 ---
 name: hal
 description: >
-  Drive instruments through the B101 HAL from NI TestStand .NET steps:
-  power supplies, DMMs, switches, muxes, matrices, oscilloscopes, programmers
-  and serial ports. Use when a sequence must call HAL instead of talking to
+  Drive instruments through the B101 HAL from NI TestStand .NET steps: power
+  supplies, DMMs, switches, muxes, matrices, oscilloscopes, programmers and
+  serial ports. Use when a sequence must call HAL instead of talking to
   hardware directly. Assumes the ts-authoring skill (ts-cli) is already known;
   this skill only adds what is HAL-specific.
 ---
@@ -14,36 +14,37 @@ This skill assumes you already know how to author sequences with `ts-cli` (see
 the `ts-authoring` skill): adapters, `TS.SData`, the call list, parameters.
 Here you only learn what is specific to HAL.
 
-## Which assembly
+## The only entry point
 
-Reference the facade **`B101.Hal.dll`** (`$HAL` in the examples).
-`B101.Hal.Core.dll` holds only interfaces and is **not** referenced as a step
-assembly; `B101.Hal.Runtime` is native and is loaded by the facade.
+Use the facade assembly **`B101.Hal.dll`** (`$HAL` in the examples), and nothing
+else:
+
+- Do **not** reference `B101.Hal.Core.dll` as a step assembly: it only holds
+  interfaces and is an implementation detail.
+- Do **not** reference, name or import the `B101.Hal.Wrappers` types.
+- The only usable API is the **`Hal` class and its instance**: create it with
+  `new Hal()` and use what that instance exposes (its interface
+  implementations and their methods).
 
 Pick the facade that matches the installed TestStand: the `net8` one for
 TestStand 2023 or newer (2025, 2026), and the `net48/` one for TestStand 2022
 and older.
 
-## Instance model
+## Sequence shape
 
-`Hal` is the root class and the only usage facade. Create **one** instance and
-reuse it for the whole sequence instead of constructing it in every step:
+Create the `Hal` instance **once** and reuse it for the whole sequence.
 
-- The first step constructs `Hal` and stores it in an object reference variable
-  (`Locals.Hal` here).
-- Every later step takes that instance and calls it.
-
-Instruments come from the instance: `PowerSupply("PSU1")` returns an
-`IPowerSupply`, `DMM("DMM_MAIN")` an `IDMM`, and so on. Storing the returned
-instrument in its own reference variable (`Locals.Psu`) and reusing it is also
-valid; the point is not to build a new `Hal` per step.
-
-## Building a HAL step with ts-cli
-
-Use the `.NET` module rules from `ts-authoring`. HAL specifics:
+- First step: `Calls[0]` is the constructor `B101.Hal.Hal`; store the result in
+  an object reference variable (`Locals.Hal` here).
+- Every later step: `Calls[0]` is `Use Existing Object` bound to `Locals.Hal`,
+  then `Calls[1]` is the method of the interface implementation you need.
 
 ```bash
-# 1. Create the HAL instance once (store it in Locals.Hal)
+# The instance variable is created once.
+ts-cli add-prop --file "$SEQ" --sequence MainSequence \
+  --path Hal --type reference
+
+# First step: create the instance and keep it.
 ts-cli set-prop --file "$SEQ" --step-id "$ID" \
   --path TS.SData.AssemblyPath --text "$HAL"
 ts-cli set-prop --file "$SEQ" --step-id "$ID" \
@@ -58,18 +59,26 @@ ts-cli set-prop --file "$SEQ" --step-id "$ID" \
   --path "TS.SData.Calls[0].Params[0].ArgVal" --text "Locals.Hal"
 ts-cli set-prop --file "$SEQ" --step-id "$ID" \
   --path "TS.SData.Calls[0].Params[0].TypeName" --text "B101.Hal.Hal"
+
+# Later step: use the existing instance.
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.AssemblyPath --text "$HAL"
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.Calls[0].MemberName --text "Use Existing Object"
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.Calls[0].MemberType --number 6
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[0].Params[0].Name" --text "Existing Object"
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[0].Params[0].ArgVal" --text "Locals.Hal"
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[0].Params[0].TypeName" --text "B101.Hal.Hal"
 ```
 
-- Instrument step: `Calls[0]` = `Use Existing Object` from `Locals.Hal`, then
-  `Calls[1]` = `PowerSupply` / `DMM` / ... Store its `Return Value` in a
-  variable (`Locals.Psu`) when you want to reuse the instrument.
-- Operation step (for example `SetVoltage`): `Calls[0]` = `Use Existing Object`
-  from `Locals.Psu`, then `Calls[1]` = the method with its arguments.
-- In an object parameter, `TypeName` is the interface
-  (`B101.Hal.Core.Interfaces.IPowerSupply`), while the step `ClassName` is the
-  type that declares the method.
+Do not keep one variable per instrument: keep the `Hal` instance and take the
+instrument from it where the step needs it.
 
-## Interfaces and methods
+## Interfaces exposed by the instance
 
 - `IInstrument` (SCPI base): `Connect`, `Disconnect`, `Write`, `Query`.
 - `IPowerSupply`: `SetVoltage`, `SetCurrentLimit`, `SetOVP`, `SetOCP`, `Enable`,
@@ -89,7 +98,8 @@ Method arguments become step parameters (see `ts-authoring`). Enums such as
 
 ## Rules
 
-- Never reference `B101.Hal.Core.dll` as a step assembly; use `B101.Hal.dll`.
-- Create `Hal` once and reuse it; do not construct it per step.
-- Module and method names are the unspaced .NET identifiers, not display names.
+- Only `B101.Hal.dll` and the `Hal` instance; never `B101.Hal.Core`, never
+  wrappers.
+- Create `Hal` once and reuse the instance; do not construct it per step.
+- Names are the unspaced .NET identifiers, not display names.
 - Authoring only: this skill never runs sequences, deploys or touches hardware.
