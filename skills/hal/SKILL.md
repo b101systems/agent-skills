@@ -78,6 +78,32 @@ ts-cli set-prop --file "$SEQ" --step-id "$ID" \
 Do not keep one variable per instrument: keep the `Hal` instance and take the
 instrument from it where the step needs it.
 
+## Reaching an instrument operation
+
+There are two normal shapes. Use the first when several steps work on the same
+instrument; use the second (the common one) when a step needs a single
+operation.
+
+**Keep the instrument.** One step stores the instance and later steps reuse it:
+
+- Store step: `Calls[0]` = `Use Existing Object` on `Locals.Hal`, then
+  `Calls[1]` = `PowerSupply("PSU1")` with its `Return Value` written to a
+  variable (`Locals.Psu`).
+- Operation step: `Calls[0]` = `Use Existing Object` on `Locals.Psu`, then
+  `Calls[1]` = the method (`SetVoltage(...)`).
+
+**Two-in-one.** From the HAL instance, call the factory and then the method on
+the implementation it returns, in the same step's call list:
+
+- `Calls[0]` = `Use Existing Object` on `Locals.Hal`.
+- `Calls[1]` = the factory (`PowerSupply("PSU1")`).
+- `Calls[2]` = the method on that implementation (`SetVoltage(...)`).
+
+In both shapes each call has its own `ClassName`: the HAL facade class on the
+calls that go through `Hal`, and the instrument interface/implementation on the
+calls that go through the instrument. Pick them from TestStand's `.NET` browser
+rather than inventing names.
+
 ## Interfaces exposed by the instance
 
 - `IInstrument` (SCPI base): `Connect`, `Disconnect`, `Write`, `Query`.
