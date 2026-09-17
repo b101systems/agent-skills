@@ -30,11 +30,20 @@ supplies, DMMs, switches, muxes, matrices, oscilloscopes, programmers and
 serial ports. It assumes `ts-authoring` is already known and adds only what is
 HAL-specific: which facade assembly to reference and how to build the steps.
 
+### `test-spec-authoring`
+
+Turn a schematic or a bill of materials into a test spec using the ATE MCP:
+component test methods, required instruments, DUT connections, measurable
+parameters and station pinout. It is read-only — it does not create TestStand
+sequences, edit limits or run tests — and hands the spec off to `ts-authoring`
+and `hal`.
+
 ## Install
 
 ```bash
 gh skill install b101systems/agent-skills ts-authoring
 gh skill install b101systems/agent-skills hal
+gh skill install b101systems/agent-skills test-spec-authoring
 ```
 
 Update later with:
@@ -42,4 +51,5 @@ Update later with:
 ```bash
 gh skill update ts-authoring
 gh skill update hal
+gh skill update test-spec-authoring
 ```
