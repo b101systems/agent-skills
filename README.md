@@ -23,14 +23,23 @@ install and
 2022 or newer with a development license; the skill drives the `ts-cli`
 command that ships with the framework.
 
+### `hal`
+
+Drive instruments through the B101 HAL from NI TestStand `.NET` steps: power
+supplies, DMMs, switches, muxes, matrices, oscilloscopes, programmers and
+serial ports. It assumes `ts-authoring` is already known and adds only what is
+HAL-specific: which facade assembly to reference and how to build the steps.
+
 ## Install
 
 ```bash
 gh skill install b101systems/agent-skills ts-authoring
+gh skill install b101systems/agent-skills hal
 ```
 
 Update later with:
 
 ```bash
 gh skill update ts-authoring
+gh skill update hal
 ```
