@@ -17,7 +17,17 @@ Here you only learn what is specific to HAL.
 ## The only entry point
 
 Use the facade assembly **`B101.Hal.dll`** (`$HAL` in the examples), and nothing
-else:
+else. The ATE Framework installer leaves it at the framework root:
+
+```text
+C:\Program Files\B101\AteFramework\B101.Hal.dll        (64-bit station)
+C:\Program Files (x86)\B101\AteFramework\B101.Hal.dll  (32-bit station)
+```
+
+Point `TS.SData.AssemblyPath` at that file. A bare `B101.Hal.dll` also resolves
+when TestStand finds it on its search path. The native `B101.Hal.Runtime.dll`
+sits next to the facade in the same folder; the facade cannot start without it,
+so never point at a copy that is missing it.
 
 - Do **not** reference `B101.Hal.Core.dll` as a step assembly: it only holds
   interfaces and is an implementation detail.
@@ -75,34 +85,28 @@ ts-cli set-prop --file "$SEQ" --step-id "$ID" \
   --path "TS.SData.Calls[0].Params[0].TypeName" --text "B101.Hal.Hal"
 ```
 
-Do not keep one variable per instrument: keep the `Hal` instance and take the
-instrument from it where the step needs it.
+Never store an instrument in a variable: keep only the `Hal` instance and reach
+the instrument from it inside each operation step.
 
 ## Reaching an instrument operation
 
-There are two normal shapes. Use the first when several steps work on the same
-instrument; use the second (the common one) when a step needs a single
-operation.
-
-**Keep the instrument.** One step stores the instance and later steps reuse it:
-
-- Store step: `Calls[0]` = `Use Existing Object` on `Locals.Hal`, then
-  `Calls[1]` = `PowerSupply("PSU1")` with its `Return Value` written to a
-  variable (`Locals.Psu`).
-- Operation step: `Calls[0]` = `Use Existing Object` on `Locals.Psu`, then
-  `Calls[1]` = the method (`SetVoltage(...)`).
-
-**Two-in-one.** From the HAL instance, call the factory and then the method on
-the implementation it returns, in the same step's call list:
+An instrument cannot be instantiated or stored on its own. The only shape is
+one step per operation that, from the `Hal` instance, calls the instrument
+method and immediately the action on what it returns:
 
 - `Calls[0]` = `Use Existing Object` on `Locals.Hal`.
-- `Calls[1]` = the factory (`PowerSupply("PSU1")`).
-- `Calls[2]` = the method on that implementation (`SetVoltage(...)`).
+- `Calls[1]` = the instrument method that returns the implementation
+  (`PowerSupply("PSU1")`).
+- `Calls[2]` = the action on that implementation (`SetVoltage(...)`).
 
-In both shapes each call has its own `ClassName`: the HAL facade class on the
-calls that go through `Hal`, and the instrument interface/implementation on the
-calls that go through the instrument. Pick them from TestStand's `.NET` browser
-rather than inventing names.
+So `SetVoltage` is never called on a stored power supply: it always follows its
+`PowerSupply(...)` call inside the same step.
+
+The **module class** (`TS.SData.ClassName`) is always **`B101.Hal.Hal`**, the
+root of everything. Every call also carries its own `ClassName`: `B101.Hal.Hal`
+on the calls that go through the HAL instance, and the **instrument interface**
+(`B101.Hal.Core.Interfaces.IPowerSupply`, ...) on the call that runs the
+action. The object a call receives or returns carries that type in `TypeName`.
 
 ## Interfaces exposed by the instance
 
@@ -126,6 +130,10 @@ Method arguments become step parameters (see `ts-authoring`). Enums such as
 
 - Only `B101.Hal.dll` and the `Hal` instance; never `B101.Hal.Core`, never
   wrappers.
+- The module class is always `B101.Hal.Hal`; instrument calls use the instrument
+  interface as their call class.
 - Create `Hal` once and reuse the instance; do not construct it per step.
+- Never instantiate or store an instrument: each operation step calls the
+  instrument method and then its action, in that order.
 - Names are the unspaced .NET identifiers, not display names.
 - Authoring only: this skill never runs sequences, deploys or touches hardware.

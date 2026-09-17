@@ -31,7 +31,8 @@ defaults. Do not probe mutating commands with guessed arguments on real files.
 Commands print JSON; errors are JSON on stderr with exit 1. Read ids such as
 `unique_step_id` and `step_ids` from responses instead of inventing them.
 
-Examples use `$SEQ` for the target `.seq` path; use the path you were given.
+Examples use `$SEQ` for the target `.seq` path and `$DLL` for a .NET assembly
+path; use the paths you were given.
 
 ## Reconnaissance
 
@@ -77,6 +78,72 @@ Property paths inside a step are **relative to the step**: `Limits.Low`,
 `inspect --step-id <id>` on a step of the target type to discover the exact
 paths; the fresh `NumericLimitTest` exposes `TS, Result, Limits, Comp,
 CompExpr, UseCompExpr, InBuf, DataSource`.
+
+## Modules: the .NET adapter
+
+A step added with the default `--adapter "None Adapter"` has no module. To call a
+.NET method, pass the adapter **`DotNet Adapter`** (that exact string; `.NET
+Adapter` is rejected) and build the call list under `TS.SData`.
+
+Every call needs an **instance**. `Calls[0]` is normally the **constructor of the
+root class** (`MemberType` 4, `MemberName` = the class, `Param[0]` = `Return
+Value`); the calls after it are **methods** on that instance (`MemberType` 1).
+A method with no instance behind it is invalid — never configure only the method.
+
+```bash
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.AssemblyPath --text "$DLL"
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.ClassName --text PowerRails
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.FunctionName --text MeasureVcc
+
+# Calls[0]: construct the root class
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.Calls[0].MemberName --text PowerRails
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.Calls[0].MemberType --number 4
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[0].Params[0].Name" --text "Return Value"
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[0].Params[0].Type" --number 0
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[0].Params[0].TypeName" --text PowerRails
+
+# Calls[1]: the method and its arguments
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.Calls[1].MemberName --text MeasureVcc
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path TS.SData.Calls[1].MemberType --number 1
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[1].Params[0].Name" --text nominal
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[1].Params[0].ArgVal" --text 5
+ts-cli set-prop --file "$SEQ" --step-id "$ID" \
+  --path "TS.SData.Calls[1].Params[0].Type" --number 6
+```
+
+Each `Params[i]` carries `Name`, `ArgVal` (a TestStand expression, so quote
+string literals), `Type` (`0` object, `1` string, `2` boolean, `6` number, `12`
+array) and `TypeName` for object types. Writing an index grows the array.
+
+**Reuse one instance across steps** instead of constructing it in every step.
+Store the object in a reference variable and have later steps take it as the
+instance:
+
+```bash
+ts-cli add-prop --file "$SEQ" --sequence MainSequence --path Device --type reference
+```
+
+The creating step writes the constructor result into the variable (`Params[0]`
+`Return Value` with `ArgVal` = `Locals.Device`). Each later step starts its call
+list with `MemberType` 6 and `MemberName` `Use Existing Object`, whose
+`Params[0]` `Existing Object` has `ArgVal` = `Locals.Device` and the interface or
+class in `TypeName`, followed by the method calls.
+
+Other adapters use their own key (`Sequence Adapter` for `SequenceCall`).
+TestStand fills the argument list from the assembly only in its editor, so take
+names and types from the spec and verify with `inspect --step-id <id>`.
 
 ## Arrays and containers
 
@@ -232,5 +299,7 @@ ts-cli set-prop --file "$SEQ" \
 - No custom data types (NamedType) and no user-defined enums; standard steps
   expose enum-like values (`Comp`, `Limits.ThresholdType`) as strings.
 - Property deletion covers locals and file globals, not step properties.
+- .NET modules are configured by hand under `TS.SData` (assembly, class, member
+  and arguments); the method signature is not read from the assembly.
 - No sequence reordering and no moves between files.
 - No execution.
