@@ -10,7 +10,7 @@ following the [Agent Skills](https://agentskills.io) layout, so tools such as
 
 ## Skills
 
-### `ts-authoring`
+### `ts-seq-authoring`
 
 Create and edit NI TestStand `.seq` files with `ts-cli`: sequences, steps,
 limits, locals/globals, arrays and batches. It does not run sequences, deploy
@@ -27,7 +27,7 @@ command that ships with the framework.
 
 Drive instruments through the B101 HAL from NI TestStand `.NET` steps: power
 supplies, DMMs, switches, muxes, matrices, oscilloscopes, programmers and
-serial ports. It assumes `ts-authoring` is already known and adds only what is
+serial ports. It assumes `ts-seq-authoring` is already known and adds only what is
 HAL-specific: which facade assembly to reference and how to build the steps.
 
 ### `test-spec-authoring`
@@ -35,13 +35,13 @@ HAL-specific: which facade assembly to reference and how to build the steps.
 Turn a schematic or a bill of materials into a test spec using the ATE MCP:
 component test methods, required instruments, DUT connections, measurable
 parameters and station pinout. It is read-only — it does not create TestStand
-sequences, edit limits or run tests — and hands the spec off to `ts-authoring`
+sequences, edit limits or run tests — and hands the spec off to `ts-seq-authoring`
 and `hal`.
 
 ## Install
 
 ```bash
-gh skill install b101systems/agent-skills ts-authoring
+gh skill install b101systems/agent-skills ts-seq-authoring
 gh skill install b101systems/agent-skills hal
 gh skill install b101systems/agent-skills test-spec-authoring
 ```
@@ -49,7 +49,7 @@ gh skill install b101systems/agent-skills test-spec-authoring
 Update later with:
 
 ```bash
-gh skill update ts-authoring
+gh skill update ts-seq-authoring
 gh skill update hal
 gh skill update test-spec-authoring
 ```

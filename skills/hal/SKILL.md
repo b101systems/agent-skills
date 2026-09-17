@@ -4,14 +4,14 @@ description: >
   Drive instruments through the B101 HAL from NI TestStand .NET steps: power
   supplies, DMMs, switches, muxes, matrices, oscilloscopes, programmers and
   serial ports. Use when a sequence must call HAL instead of talking to
-  hardware directly. Assumes the ts-authoring skill (ts-cli) is already known;
+  hardware directly. Assumes the ts-seq-authoring skill (ts-cli) is already known;
   this skill only adds what is HAL-specific.
 ---
 
 # Using HAL from TestStand
 
 This skill assumes you already know how to author sequences with `ts-cli` (see
-the `ts-authoring` skill): adapters, `TS.SData`, the call list, parameters.
+the `ts-seq-authoring` skill): adapters, `TS.SData`, the call list, parameters.
 Here you only learn what is specific to HAL.
 
 ## The only entry point
@@ -123,7 +123,7 @@ action. The object a call receives or returns carries that type in `TypeName`.
 - `IProgrammer`: `Connect`, `Flash`, `Verify`, `Erase`, `Reset`.
 - `ISerialComm`: `Configure`, `Open`, `Read`, `Write`, `SendReceive`.
 
-Method arguments become step parameters (see `ts-authoring`). Enums such as
+Method arguments become step parameters (see `ts-seq-authoring`). Enums such as
 `DmmFunction` are passed as their numeric or string value.
 
 ## Rules

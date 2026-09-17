@@ -1,5 +1,5 @@
 ---
-name: ts-authoring
+name: ts-seq-authoring
 description: >
   Create or edit NI TestStand .seq files with ts-cli: sequences, steps, limits,
   locals/globals, arrays and batches. Use when asked to scaffold or edit a

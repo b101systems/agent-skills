@@ -6,13 +6,13 @@ description: >
   parameters and station pinout. Use when given a schematic or asked to create
   a test spec for a component or an electronic assembly. Read-only: it does not
   create TestStand sequences, edit limits or run tests. Pairs with the
-  ts-authoring and hal skills, which take the spec into a sequence.
+  ts-seq-authoring and hal skills, which take the spec into a sequence.
 ---
 
 # Authoring test specs with the ATE MCP
 
 This skill produces the **test spec**. It does not build the sequence: that is
-`ts-authoring` (`ts-cli`), and the instrument calls inside the steps are the
+`ts-seq-authoring` (`ts-cli`), and the instrument calls inside the steps are the
 `hal` skill. Here you only learn how to turn a schematic into a spec an
 engineer can review.
 
@@ -126,7 +126,7 @@ exist; never invent them.
 
 The spec is the input for the next two skills:
 
-- `ts-authoring` — creates the `.seq` with `ts-cli`, one measure per step, and
+- `ts-seq-authoring` — creates the `.seq` with `ts-cli`, one measure per step, and
   the limits linked to the variant store.
 - `hal` — builds the instrument calls inside the steps, from the method's roles
   and connections.
@@ -145,6 +145,6 @@ hand-off, but do not build the sequence yourself.
 ## Known gaps (v0)
 
 - Read-only: no limits, no variant edits, no catalog edits.
-- No TestStand sequence creation; that is `ts-authoring`.
+- No TestStand sequence creation; that is `ts-seq-authoring`.
 - No internal netlist of an assembly; only the catalog pins.
 - No multi-DUT or panel test flows.
